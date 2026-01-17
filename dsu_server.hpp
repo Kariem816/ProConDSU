@@ -12,4 +12,6 @@ public:
 private:
   ByteBuffer handleMessage(const ByteBuffer &buf, Connection conn);
   std::vector<Connection> connections;
+
+  uint32_t serverId;
 };

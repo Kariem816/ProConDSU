@@ -7,12 +7,12 @@
 #include <thread>
 #include <winsock2.h>
 
+#include "common/types.hpp"
+
 struct Connection {
   std::string ip;
   uint16_t port;
 };
-
-using ByteBuffer = std::vector<uint8_t>;
 
 class UdpServer {
   using MsgHandler = std::function<ByteBuffer(const ByteBuffer &, Connection)>;

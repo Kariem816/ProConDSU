@@ -2,10 +2,16 @@
 
 #include <cstring>
 #include <iostream>
+#include <print>
+
+#include "packet/formatters.hpp"
+#include "packet/packet.hpp"
+
 
 DsuServer::DsuServer(const std::string &address, uint16_t port)
     : UdpServer(address, port) {
   setMessageHandler(std::bind_front(&DsuServer::handleMessage, this));
+  serverId = std::rand();
 }
 
 DsuServer::~DsuServer() {}
@@ -19,9 +25,31 @@ ByteBuffer DsuServer::handleMessage(const ByteBuffer &buf, Connection conn) {
     return {};
   }
 
-  std::string message = "Connected to ProconDSU Server";
-  ByteBuffer response;
-  response.resize(message.size());
-  std::memcpy(response.data(), message.data(), message.size());
-  return response;
+  Packet req;
+  auto err = req.deserialize(buf);
+  if (err != DeserializeError::None) {
+    return {};
+  }
+
+  std::println("{}", req);
+
+  ProtocolVersionResponse pvrs;
+  pvrs.version = 1001;
+  auto body = pvrs.serialize();
+
+  PacketHeader header;
+  header.magic[0] = 'D';
+  header.magic[1] = 'S';
+  header.magic[2] = 'U';
+  header.magic[3] = 'S';
+  header.protocol = 1001;
+  header.length = static_cast<uint16_t>(sizeof(MessageType) + body.size());
+  header.crc32 = 0;
+  header.clientServerID = serverId;
+
+  Packet resp;
+  resp.header = header;
+  resp.type = MessageType::ProtocolVersionMessage;
+  resp.body = body;
+  return resp.serialize();
 }
