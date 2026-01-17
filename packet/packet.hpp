@@ -102,9 +102,13 @@ struct ControllersInfoRequest : public Serializable {
                            // value above. Each value is less than 4.
   SERIALIZABLE_IMPL()
 };
-struct ControllersInfoResponse : public Serializable {
+struct ControllerInfoResponse : public Serializable {
   ControllerInfoShared info;
   byte _; // Zero byte (\0).
+  SERIALIZABLE_IMPL()
+};
+struct ControllersInfoResponse : public Serializable {
+  std::vector<ControllerInfoResponse> info;
   SERIALIZABLE_IMPL()
 };
 

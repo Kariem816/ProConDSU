@@ -221,7 +221,7 @@ ByteBuffer ControllersInfoRequest::serialize() const {
   return writer.getBuffer();
 }
 
-DeserializeError ControllersInfoResponse::deserialize(const ByteBuffer &buf) {
+DeserializeError ControllerInfoResponse::deserialize(const ByteBuffer &buf) {
   if (buf.size() != 12) {
     return DeserializeError::ErrInvalidLength;
   }
@@ -236,10 +236,41 @@ DeserializeError ControllersInfoResponse::deserialize(const ByteBuffer &buf) {
   return DeserializeError::None;
 }
 
-ByteBuffer ControllersInfoResponse::serialize() const {
+ByteBuffer ControllerInfoResponse::serialize() const {
   ByteBuffer result = info.serialize();
   result.push_back(_); // Add padding byte
   return result;
+}
+
+DeserializeError ControllersInfoResponse::deserialize(const ByteBuffer &buf) {
+  if (buf.size() % 12 != 0) {
+    return DeserializeError::ErrInvalidLength;
+  }
+
+  size_t count = buf.size() / 12;
+  info.clear();
+
+  for (size_t i = 0; i < count; ++i) {
+    ByteBuffer infoBuf(buf.begin() + i * 12, buf.begin() + (i + 1) * 12);
+    ControllerInfoResponse cir;
+    auto err = cir.info.deserialize(infoBuf);
+    if (err != DeserializeError::None)
+      return err;
+    info.push_back(cir);
+  }
+
+  // Skip zero byte at data[11]
+  return DeserializeError::None;
+}
+
+ByteBuffer ControllersInfoResponse::serialize() const {
+  BinaryWriter writer;
+  for (const auto &cir : info) {
+    ByteBuffer cirBuf = cir.serialize();
+    writer.writeBytes(cirBuf.data(), 11);
+    writer.write(0); // Write padding byte
+  }
+  return writer.getBuffer();
 }
 
 DeserializeError ControllerIdentifier::deserialize(const ByteBuffer &buf) {

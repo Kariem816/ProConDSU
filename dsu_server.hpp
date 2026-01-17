@@ -1,7 +1,12 @@
 #pragma once
 
-#include <vector>
+#include <map>
+#include <mutex>
+#include <string>
+#include <thread>
 
+#include "common/types.hpp"
+#include "dsu_client.hpp"
 #include "udp_server.hpp"
 
 class DsuServer : public UdpServer {
@@ -11,7 +16,11 @@ public:
 
 private:
   ByteBuffer handleMessage(const ByteBuffer &buf, Connection conn);
-  std::vector<Connection> connections;
+
+  std::map<uint32_t, DsuClient> clients;
+  std::mutex clientsMutex;
 
   uint32_t serverId;
+
+  std::jthread updateThread;
 };

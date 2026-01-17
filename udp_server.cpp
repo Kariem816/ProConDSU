@@ -89,29 +89,30 @@ void UdpServer::listen(std::stop_token stoken) {
     clientIp.resize(clientIp.c_str() + strlen(clientIp.c_str()) -
                     clientIp.data());
 
-    Connection conn = {
-        .ip = clientIp,
-        .port = ntohs(si_other.sin_port),
-    };
+    Connection conn(si_other);
     std::vector<uint8_t> buf;
     buf.resize(recv_len);
     std::memcpy(buf.data(), recv_buf, recv_len);
 
     auto retBuffer = msgHandler(buf, conn);
-    if (retBuffer.size() > 0) {
-      sendto(s, (const char *)retBuffer.data(), retBuffer.size(), 0,
-             (struct sockaddr *)&si_other, slen);
-    }
+    send(retBuffer, conn);
   }
 }
 
 ByteBuffer UdpServer::defaultMessageHandler(const ByteBuffer &buf,
                                             Connection conn) {
-  std::cout << conn.ip << ":" << conn.port << " => ";
+  std::cout << conn.ip() << ":" << conn.port() << " => ";
   for (uint8_t byte : buf) {
     std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
               << (int)byte << " ";
   }
   std::cout << std::dec << std::endl;
   return buf;
+}
+
+void UdpServer::send(const ByteBuffer &buf, Connection conn) {
+  if (buf.size() > 0) {
+    sendto(s, (const char *)buf.data(), buf.size(), 0,
+           (struct sockaddr *)&conn.addr, sizeof(conn.addr));
+  }
 }

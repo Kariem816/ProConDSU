@@ -188,14 +188,32 @@ struct std::formatter<ControllersInfoRequest>
 };
 
 template <>
+struct std::formatter<ControllerInfoResponse>
+    : std::formatter<std::string_view> {
+  constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
+
+  auto format(const ControllerInfoResponse &cir,
+              std::format_context &ctx) const {
+    return std::format_to(ctx.out(), "ControllerInfoResponse{{{}}}", cir.info);
+  }
+};
+
+template <>
 struct std::formatter<ControllersInfoResponse>
     : std::formatter<std::string_view> {
   constexpr auto parse(std::format_parse_context &ctx) { return ctx.begin(); }
 
   auto format(const ControllersInfoResponse &cirs,
               std::format_context &ctx) const {
+    std::string joinedInfo;
+    for (size_t i = 0; i < cirs.info.size(); ++i) {
+      joinedInfo += std::format("{}", cirs.info[i]);
+      if (i < cirs.info.size() - 1) {
+        joinedInfo += ", ";
+      }
+    }
     return std::format_to(ctx.out(), "ControllersInfoResponse{{{}}}",
-                          cirs.info);
+                          joinedInfo);
   }
 };
 

@@ -6,6 +6,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(packet)
 
-add_executable(proconDSU main.cpp udp_server.cpp udp_server.hpp dsu_server.cpp dsu_server.hpp)
+add_executable(proconDSU main.cpp udp_server.cpp udp_server.hpp dsu_server.cpp dsu_server.hpp dsu_client.hpp)
 target_include_directories(proconDSU PRIVATE ${CMAKE_SOURCE_DIR})
 target_link_libraries(proconDSU PRIVATE packet ws2_32 stdc++exp)

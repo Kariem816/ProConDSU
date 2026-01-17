@@ -9,11 +9,6 @@
 
 #include "common/types.hpp"
 
-struct Connection {
-  std::string ip;
-  uint16_t port;
-};
-
 class UdpServer {
   using MsgHandler = std::function<ByteBuffer(const ByteBuffer &, Connection)>;
 
@@ -31,6 +26,9 @@ public:
 
 private:
   void listen(std::stop_token token);
+
+protected:
+  void send(const ByteBuffer &buf, Connection conn);
 
 private:
   std::jthread listenThread;
