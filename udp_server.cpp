@@ -1,5 +1,6 @@
 #include "udp_server.hpp"
 
+#include <chrono>
 #include <cstring>
 #include <functional>
 #include <iomanip>
@@ -70,14 +71,30 @@ void UdpServer::listen(std::stop_token stoken) {
   char recv_buf[512];
 
   while (!stoken.stop_requested()) {
-    std::memset(recv_buf, '\0', 512);
+    fd_set readfds;
+    FD_ZERO(&readfds);
+    FD_SET(s, &readfds);
 
+    timeval tv;
+    tv.tv_sec = 1; // 1 second timeout
+    tv.tv_usec = 0;
+
+    int select_result = select(0, &readfds, nullptr, nullptr, &tv);
+    if (select_result == SOCKET_ERROR) {
+      std::cerr << "select failed with error code : " << WSAGetLastError()
+                << std::endl;
+      break;
+    }
+
+    if (select_result == 0) { // timeout
+      continue;
+    }
+
+    // Data is available
+    std::memset(recv_buf, '\0', 512);
     int recv_len =
         recvfrom(s, recv_buf, 512, 0, (struct sockaddr *)&si_other, &slen);
     if (recv_len == SOCKET_ERROR) {
-      if (WSAGetLastError() == WSAEWOULDBLOCK) {
-        continue;
-      }
       std::cerr << "recvfrom failed with error code : " << WSAGetLastError()
                 << std::endl;
       break;
