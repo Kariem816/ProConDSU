@@ -6,6 +6,7 @@
 #include <thread>
 
 #include "common/types.hpp"
+#include "controller_manager.hpp"
 #include "dsu_client.hpp"
 #include "udp_server.hpp"
 
@@ -17,10 +18,14 @@ public:
 private:
   ByteBuffer handleMessage(const ByteBuffer &buf, Connection conn);
 
-  std::map<uint32_t, DsuClient> clients;
-  std::mutex clientsMutex;
+  // Helper to convert ProController input to DSU format
+  ControllersDataResponse buildControllerDataResponse(size_t controller_index);
+  ControllersInfoResponse buildControllersInfoResponse();
+
+  ControllerManager controllerManager;
 
   uint32_t serverId;
+  uint32_t packetCounter;
 
   std::jthread updateThread;
 };
